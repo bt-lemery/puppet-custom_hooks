@@ -1,38 +1,41 @@
 define custom_hooks::hook(
-  $ensure = 'present',
-  $namespace,
-  $project,
-  $hook_type,
-  $content = undef,
-  $source = undef,
+  String $ensure = 'present',
+  String $namespace,
+  String $project,
+  Enum['update', 'post-receive', 'pre-receive'] $hook_type,
+  Optional[String] $content = undef,
+  Optional[String] $source = undef,
 ){
 
-  if $ensure == 'present' {
-    $d = custom_hooks::get_repo_dir($namespace, $project)
 
-    if !defined(File["${d}/custom_hooks"]) {
-      file { "${d}/custom_hooks":
+  if $ensure == 'present' {
+
+    if !defined(File['hook_path']) {
+      file { 'hook_path':
         ensure => directory,
+        path   => Deferred('sprintf', [ '%s/%s', Deferred('custom_hooks::get_repo_dir', [$namespace, $project]), 'custom_hooks' ]),
         owner  => 'git',
         group  => 'root',
         mode   => '0755',
       }
     }
 
-    file { "${d}/custom_hooks/${hook_type}":
+    file { $name:
       ensure  => present,
+      path    => Deferred('sprintf', [ '%s/%s/%s', Deferred('custom_hooks::get_repo_dir', [$namespace, $project]), 'custom_hooks', $hook_type ]),
       owner   => 'git',
       group   => 'root',
       mode    => '0755',
       content => $content,
       source  => $source,
     }
+
   } else {
-    $d = custom_hooks::get_repo_dir($namespace, $project)
 
-    file { "${d}/custom_hooks/${hook_type}":
-      ensure  => absent,
+    file { $name:
+      ensure => absent,
+      path    => Deferred('sprintf', [ '%s/%s/%s', Deferred('custom_hooks::get_repo_dir', [$namespace, $project]), 'custom_hooks', $hook_type ]),
     }
-  }
 
+  }
 }
