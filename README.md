@@ -31,6 +31,7 @@ This module requires a valid Gitlab access token with read_api access https://do
 
 Add the following class declaration and any custom_hook::hook defined type resources to your gitaly nodes:
 
+```
 class { '::custom_hooks':
   config_file  => '/root/gitfig.yaml',
   repo_path    => '/var/opt/gitlab/git-data/repositories',
@@ -39,11 +40,13 @@ class { '::custom_hooks':
   use_ssl      => true,
   verify_ssl   => false,
 }
+```
 
 The main class sets up the config file that the get_repo_dir function reads to determine where it will create your 'custom_hook' directories.
 
-Declare you custom hooks like so.  Substitute 'content' for 'source' below if you need a template.
+You can declare you custom hooks like so.  Substitute 'content' for 'source' below if you need a template.
 
+```
 custom_hooks::hook { 'foo':
   ensure    => present,
   namespace => 'lemery',
@@ -52,6 +55,7 @@ custom_hooks::hook { 'foo':
   source    => "file:///root/test.sh",
   require   => Class['custom_hooks'],
 }
+```
 
 Declare your hook with `ensure => absent` and they will be removed.
 
