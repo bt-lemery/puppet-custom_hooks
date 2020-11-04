@@ -49,8 +49,7 @@ You can declare you custom hooks like so.  Substitute 'content' for 'source' bel
 ```
 custom_hooks::hook { 'foo':
   ensure    => present,
-  namespace => 'lemery',
-  project   => 'test-project',
+  project   => 'lemery/test-project',
   hook_type => 'pre-receive',
   source    => "file:///root/test.sh",
   require   => Class['custom_hooks'],
@@ -74,3 +73,4 @@ Requires Puppet 6+
 ## Development
 
 There are always bugs.  Pull requests very welcome.
+
