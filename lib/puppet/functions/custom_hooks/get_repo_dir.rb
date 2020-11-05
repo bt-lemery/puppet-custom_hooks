@@ -1,44 +1,37 @@
 Puppet::Functions.create_function(:'custom_hooks::get_repo_dir') do
   dispatch :get_repo_dir do
-    param 'String', :config_file
-    param 'String', :namespace
+    param 'String', :external_url
     param 'String', :project
+    param 'String', :repo_path
+    param 'String', :token
+    param 'Boolean', :use_ssl
+    param 'Boolean', :verify_ssl
   end
 
-  def get_repo_dir(config_file, namespace, project)
+  def get_repo_dir(external_url, project, repo_path, token, use_ssl, verify_ssl)
     require 'digest'
-    config = get_config(config_file)
-    id = get_project_id(config, namespace, project)
+    id = get_project_id(external_url, project, token, use_ssl, verify_ssl)
     hash = Digest::SHA256.hexdigest "#{id}"
     prefixes = hash.match(/(..)(..)/)
-    repo_dir = config['repo_path'] + '/@hashed/' + prefixes[1] + '/' + prefixes[2] + '/' + hash + '.git'
+    repo_dir = "#{repo_path}/@hashed/#{prefixes[1]}/#{prefixes[2]}/#{hash}.git"
     repo_dir
   end
 
-  def get_config(get_config)
-    require 'yaml'
-    config = YAML.load_file(config_file)
-    config
-  end
-
-  def get_project_id(config, namespace, project)
-    # require 'net/http'
+  def get_project_id(external_url, project, token, use_ssl, verify_ssl)
     require 'net/https'
     require 'json'
-    url = config['external_url'] + '/api/v4/projects/' + namespace + "%2F" + project
-    uri = URI.parse(url)
+    require "erb"
+    uri = URI.parse("#{external_url}/api/v4/projects/#{ERB::Util.url_encode(project)}")
     http = Net::HTTP.new(uri.host, uri.port)
-    if config['use_ssl']
+    if use_ssl
       http.use_ssl = true
     end
-    if ! config['verify_ssl']
+    if ! verify_ssl
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     end
-    headers = { "PRIVATE-TOKEN" => "#{config['token']}" }
-    request = Net::HTTP::Get.new(uri.request_uri, headers)
+    request = Net::HTTP::Get.new(uri.request_uri, { "PRIVATE-TOKEN" => "#{token}" })
     response = http.request(request)
-    body = response.body
-    json = JSON.parse(body)
+    json = JSON.parse(response.body)
     json['id']
   end
 end
