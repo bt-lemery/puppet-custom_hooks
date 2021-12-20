@@ -33,7 +33,7 @@ Puppet::Functions.create_function(:'custom_hooks::get_repo_dir') do
     begin
       response = http.request(request)
     rescue StandardError => e
-      puts e.message
+      Puppet.err "custom_hooks::get_repo_dir: Failed to connect to GitLab external url: #{e.message}"
       return nil
     end
     json = JSON.parse(response.body)
