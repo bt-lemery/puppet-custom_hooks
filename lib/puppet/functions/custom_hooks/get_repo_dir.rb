@@ -30,7 +30,12 @@ Puppet::Functions.create_function(:'custom_hooks::get_repo_dir') do
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     end
     request = Net::HTTP::Get.new(uri.request_uri, { "PRIVATE-TOKEN" => "#{token}" })
-    response = http.request(request)
+    begin
+      response = http.request(request)
+    rescue StandardError => e
+      puts e.message
+      return nil
+    end
     json = JSON.parse(response.body)
     json['id']
   end
